@@ -1,2 +1,3 @@
 # VenueLink
-Its a event booking platform
+
+A simple event booking platform.
