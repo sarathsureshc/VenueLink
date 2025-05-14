@@ -24,8 +24,8 @@ import { Link } from 'react-router-dom';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EventIcon from '@mui/icons-material/Event';
 import dayjs from 'dayjs';
-import api from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext';
+import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const MyEventsPage = () => {
   const { user } = useAuth();

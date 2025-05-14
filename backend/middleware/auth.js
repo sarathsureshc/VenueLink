@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const ErrorResponse = require('../utils/errorResponse');
 
+// Protect Middleware - checks if user is authenticated
 exports.protect = async (req, res, next) => {
   let token;
 
@@ -30,4 +31,15 @@ exports.protect = async (req, res, next) => {
   } catch (err) {
     return next(new ErrorResponse('Not authorized to access this route', 401));
   }
+};
+
+// Authorize Middleware - checks if user has the required roles
+exports.authorize = (...roles) => {
+  return (req, res, next) => {
+    // Check if user role matches any of the allowed roles
+    if (!roles.includes(req.user.role)) {
+      return next(new ErrorResponse('User role not authorized to access this resource', 403));
+    }
+    next();
+  };
 };

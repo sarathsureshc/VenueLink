@@ -12,7 +12,11 @@ connectDB();
 
 // Init Middleware
 app.use(express.json({ extended: false }));
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // Replace with your frontend URL
+  credentials: true, // If using cookies/auth
+}));
 app.use(helmet());
 app.use(morgan('dev'));
 

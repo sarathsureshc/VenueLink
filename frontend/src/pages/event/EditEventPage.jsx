@@ -23,8 +23,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import api from '../../../services/api';
-import FileUpload from '../../../components/common/FileUpload';
+import api from '../../services/api';
+import FileUpload from '../../components/common/FileUpload';
 
 const EditEventPage = () => {
   const { id } = useParams();

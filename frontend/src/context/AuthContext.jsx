@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [isLoading, setIsLoading] = useState(true);
@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (formData) => {
     try {
       const res = await axios.post('/api/auth/login', formData);
-      
+
       if (res.data.message === 'Account not verified. OTP sent to email.') {
         return res.data;
       }
@@ -145,3 +145,5 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
+export default AuthProvider;

@@ -13,8 +13,8 @@ import {
   Stack,
 } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
-import EventCard from '../../../components/event/EventCard';
-import api from '../../../services/api';
+import EventCard from '../../components/event/EventCard';
+import api from '../../services/api';
 
 const EventsPage = () => {
   const [events, setEvents] = useState([]);

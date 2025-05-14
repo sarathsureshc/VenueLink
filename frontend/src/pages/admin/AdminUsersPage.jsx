@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import dayjs from 'dayjs';
-import api from '../../../services/api';
+import api from '../../services/api';
 
 const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);

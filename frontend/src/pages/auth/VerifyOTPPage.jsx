@@ -8,7 +8,7 @@ import {
   Button,
   Alert,
 } from '@mui/material';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const VerifyOTPPage = () => {
   const navigate = useNavigate();

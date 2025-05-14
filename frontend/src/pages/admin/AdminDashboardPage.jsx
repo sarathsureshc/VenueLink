@@ -16,7 +16,7 @@ import {
 } from '@mui/icons-material';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
-import api from '../../../services/api';
+import api from '../../services/api';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 

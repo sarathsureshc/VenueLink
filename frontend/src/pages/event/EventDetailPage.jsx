@@ -24,8 +24,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import EventIcon from '@mui/icons-material/Event';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import api from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext';
+import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const EventDetailPage = () => {
   const { id } = useParams();

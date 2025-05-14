@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -12,48 +12,64 @@ import {
   Grid,
   Alert,
   Snackbar,
+  CircularProgress,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import dayjs from 'dayjs';
-import api from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext';
+import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const BookingDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     const fetchBooking = async () => {
       try {
         setLoading(true);
         const res = await api.get(`/bookings/${id}`);
+        
+        // Verify the booking belongs to the user or user is admin
+        if (res.data.data.user._id !== user.id && user.role !== 'admin') {
+          navigate('/bookings', { replace: true });
+          return;
+        }
+        
         setBooking(res.data.data);
       } catch (err) {
-        setError(err.message);
+        setError(err.response?.data?.message || 'Failed to load booking details');
       } finally {
         setLoading(false);
       }
     };
 
     fetchBooking();
-  }, [id]);
+  }, [id, user, navigate]);
 
   const handleCancelBooking = async () => {
     try {
+      setCancelling(true);
       await api.put(`/bookings/${id}/cancel`);
       setBooking({ ...booking, status: 'cancelled' });
       setSnackbarMessage('Booking cancelled successfully');
       setSnackbarSeverity('success');
-      setOpenSnackbar(true);
     } catch (err) {
-      setSnackbarMessage(err.response?.data?.message || 'Cancellation failed');
+      setSnackbarMessage(err.response?.data?.message || 'Failed to cancel booking');
       setSnackbarSeverity('error');
+    } finally {
+      setCancelling(false);
       setOpenSnackbar(true);
     }
   };
@@ -62,9 +78,40 @@ const BookingDetailPage = () => {
     setOpenSnackbar(false);
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!booking) return <div>Booking not found</div>;
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ my: 4 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+        <Button variant="contained" onClick={() => navigate('/bookings')}>
+          Back to My Bookings
+        </Button>
+      </Container>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <Container maxWidth="lg" sx={{ my: 4 }}>
+        <Typography variant="h6">Booking not found</Typography>
+        <Button variant="contained" onClick={() => navigate('/bookings')}>
+          Back to My Bookings
+        </Button>
+      </Container>
+    );
+  }
+
+  const isPastEvent = dayjs(booking.event.date).isBefore(dayjs(), 'day');
+  const canCancel = booking.status === 'confirmed' && !isPastEvent;
 
   return (
     <Container maxWidth="lg" sx={{ my: 4 }}>
@@ -81,12 +128,12 @@ const BookingDetailPage = () => {
               </Typography>
               <Divider sx={{ my: 2 }} />
 
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="body1" sx={{ mr: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                <Typography variant="body1">
                   <strong>Booking ID:</strong> {booking._id}
                 </Typography>
                 <Chip
-                  label={booking.status}
+                  label={booking.status.toUpperCase()}
                   color={
                     booking.status === 'confirmed'
                       ? 'success'
@@ -97,9 +144,14 @@ const BookingDetailPage = () => {
                 />
               </Box>
 
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                <strong>Event Date:</strong> {dayjs(booking.event.date).format('dddd, MMMM D, YYYY')} at {booking.event.time}
-              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body1">
+                  <strong>Event Date:</strong> {dayjs(booking.event.date).format('dddd, MMMM D, YYYY')}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Time:</strong> {booking.event.time}
+                </Typography>
+              </Box>
 
               <Typography variant="body1" sx={{ mb: 2 }}>
                 <strong>Location:</strong> {booking.event.location}
@@ -121,41 +173,39 @@ const BookingDetailPage = () => {
               {booking.tickets.map((ticket, index) => (
                 <Box key={index} sx={{ mb: 2 }}>
                   <Typography variant="body1">
-                    <strong>{ticket.type.toUpperCase()}:</strong> {ticket.quantity} x ${ticket.price} = ${ticket.quantity * ticket.price}
+                    <strong>{ticket.type.toUpperCase()}:</strong> {ticket.quantity} × ${ticket.price.toFixed(2)} = ${(ticket.quantity * ticket.price).toFixed(2)}
                   </Typography>
                 </Box>
               ))}
 
               <Divider sx={{ my: 2 }} />
 
-              <Typography variant="h6" sx={{ textAlign: 'right' }}>
-                Total: ${booking.totalAmount}
+              <Typography variant="h6" sx={{ textAlign: 'right', fontWeight: 600 }}>
+                Total: ${booking.totalAmount.toFixed(2)}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card sx={{ position: 'sticky', top: 20 }}>
+          <Card sx={{ position: isMobile ? 'static' : 'sticky', top: 20 }}>
             <CardContent>
               <Typography variant="h5" gutterBottom>
                 Booking Actions
               </Typography>
               <Divider sx={{ my: 2 }} />
 
-              {booking.status === 'confirmed' && (
+              {canCancel && (
                 <Button
                   fullWidth
                   variant="contained"
                   color="error"
                   sx={{ mb: 2 }}
                   onClick={handleCancelBooking}
-                  disabled={
-                    dayjs(booking.event.date).isBefore(dayjs()) ||
-                    booking.status !== 'confirmed'
-                  }
+                  disabled={cancelling}
+                  startIcon={cancelling ? <CircularProgress size={20} color="inherit" /> : null}
                 >
-                  Cancel Booking
+                  {cancelling ? 'Cancelling...' : 'Cancel Booking'}
                 </Button>
               )}
 
@@ -164,8 +214,9 @@ const BookingDetailPage = () => {
                 variant="outlined"
                 component={Link}
                 to={`/events/${booking.event._id}`}
+                sx={{ mb: 2 }}
               >
-                View Event
+                View Event Details
               </Button>
 
               {booking.status === 'cancelled' && (
@@ -174,7 +225,7 @@ const BookingDetailPage = () => {
                 </Alert>
               )}
 
-              {dayjs(booking.event.date).isBefore(dayjs()) && (
+              {isPastEvent && (
                 <Alert severity="info" sx={{ mt: 2 }}>
                   This event has already taken place.
                 </Alert>
